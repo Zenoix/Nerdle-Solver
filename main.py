@@ -52,8 +52,9 @@ class Solver:
             for lhs in product(poss_chars, repeat=lhs_len):
                 if self.__validate_lhs(self, pattern, lhs):
                     for rhs in product(poss_num, repeat=rhs_len):
-                        if eval("".join(lhs)) == eval("".join(rhs)):
-                            print("".join(lhs) + "=" + "".join(rhs))
+                        lhs_str, rhs_str = "".join(lhs), "".join(rhs)
+                        if eval(f"{lhs_str} == {rhs_str}"):
+                            print(f"{lhs_str}={rhs_str}")
 
     def solve(self) -> None:
         for i in range(6):
