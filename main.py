@@ -13,6 +13,7 @@ class Solver:
         ]
         self.__possible_chars: set = set("1234567890+-*/")
         self.__operators: set = {"+", "-", "*", "/", "="}
+        self.__guesses: list[str] = []
 
     def __find_eq_index(self) -> None:
         eq_index = int(input(
@@ -29,7 +30,12 @@ class Solver:
                 if patt[eq_index] != "="]
 
     def __update_possible_chars(self):
-        pass
+        used_equation = ""
+        while len(used_equation) != 8:
+            used_equation = input("What equation did you use? ").strip()
+            if used_equation != "":
+                print("Invalid equation.")
+        # TODO Finish this using regex
 
     def __validate_lhs(self, pattern: list[str], lhs: tuple[str]) -> bool:
         cons_ops = any(
@@ -42,9 +48,9 @@ class Solver:
                     ]
         return all(conditions)
 
-    def __find_possible_solutions(self, poss_patterns: list[list[str]], poss_chars: str) -> None:
+    def __find_possible_solutions(self, poss_chars: str) -> None:
         poss_num = set(poss_chars) - self.__operators
-        for pattern in poss_patterns:
+        for pattern in self.__poss_patterns:
             if self.__eq_index != -1:
                 lhs_len = pattern.index("=")
             else:
@@ -53,13 +59,15 @@ class Solver:
                 if self.__validate_lhs(self, pattern, lhs):
                     for rhs in product(poss_num, repeat=rhs_len):
                         lhs_str, rhs_str = "".join(lhs), "".join(rhs)
-                        if eval(f"{lhs_str} == {rhs_str}"):
-                            print(f"{lhs_str}={rhs_str}")
+                        equation = f"{lhs_str}={rhs_str}"
+                        if eval(f"{lhs_str} == {rhs_str}") and equation not in self.__guesses:
+                            print(equation)
 
     def solve(self) -> None:
         for i in range(6):
             if self.__eq_index == -1:
                 self.__find_eq_index()
+            self.__update_possible_chars()
 
 
 if __name__ == "__main__":
