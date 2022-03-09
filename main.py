@@ -87,14 +87,15 @@ class Solver:
                 lhs_len = pattern.index("=")
             else:
                 lhs_len, rhs_len = self.__eq_index, 7 - self.__eq_index
-            for lhs in product(self.__nums | self.__operators, repeat=lhs_len):
+            for lhs in product((self.__nums | self.__operators).keys(), repeat=lhs_len):
                 if self.__validate_lhs(self, pattern, lhs):
-                    for rhs in product(self.__nums, repeat=rhs_len):
+                    for rhs in product(self.__nums.keys(), repeat=rhs_len):
                         lhs_str, rhs_str = "".join(lhs), "".join(rhs)
                         if self.__validate_equation(lhs_str, rhs_str):
                             print(f"{lhs_str}={rhs_str}")
 
     def solve(self) -> None:
+        # TODO put it all together and test it
         for i in range(6):
             if self.__eq_index == -1:
                 self.__find_eq_index()
