@@ -1,6 +1,6 @@
 from re import match
 from itertools import groupby, product
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 
 class Solver:
@@ -29,14 +29,15 @@ class Solver:
                 patt for patt in self.__poss_patterns
                 if patt[eq_index] != "="]
 
-    def __update_possible_chars(self):
+    def __update_possible_chars(self) -> None:
         prompt = "What color was {} at position {}? Green/Purple/Gray: "
-        counter = defaultdict()
+        counts = defaultdict()
         used_equation = ""
         while len(used_equation) != 8:
             used_equation = input("What equation did you use? ").strip()
             if used_equation != "":
                 print("Invalid equation.")
+        self.__guesses.append(used_equation)
         for i, char in enumerate(used_equation):
             if char == "=":
                 continue
@@ -45,31 +46,40 @@ class Solver:
                 case "green":
                     for pattern in self.__poss_patterns:
                         pattern[i] = char
-                    counter[char] += 1
+                    counts[char] += 1
                 case "purple":
-                    counter[char] += 1
+                    counts[char] += 1
                 case "gray" if char in self.__nums:
-                    if char in counter:
-                        self.__nums[char] = counter[char]
+                    if char in counts:
+                        self.__nums[char] = counts[char]
                     else:
                         del self.__nums[char]
                 case "gray" if char in self.__operators:
-                    if char in counter:
-                        self.__operators[char] = counter[char]
+                    if char in counts:
+                        self.__operators[char] = counts[char]
                     else:
                         del self.__operators[char]
 
     def __validate_lhs(self, pattern: list[str], lhs: tuple[str]) -> bool:
-        # TODO use the value in the char dicts (max possible occurances) to add a validation
-        cons_ops = any(
-            len(list(g)) > 1 for k, g in groupby(lhs) if k in self.__operators
+        consecutive_operators_valid = all(
+            len(list(g)) == 1 for k, g in groupby(lhs) if k in self.__operators
         )
         conditions = [
             lhs[0] not in "0+-*/",
-            cons_ops,
-            match("".join(pattern), "".join(lhs))
+            consecutive_operators_valid,
+            match("".join(pattern[:pattern.index("=")]), "".join(lhs))
         ]
         return all(conditions)
+
+    def __validate_equation(self, lhs_str: str, rhs_str: str) -> bool:
+        possible_char_counter = Counter(self.__nums | self.__operators)
+        equation_counter = Counter(lhs_str + rhs_str)
+        counter_diff = possible_char_counter.subtract(equation_counter)
+        if len(-counter_diff):
+            return False
+        if len(rhs_str) > 1 and len(rhs_str) == "0":
+            return False
+        return eval(f"{lhs_str} == {rhs_str}") and f"{lhs_str}={rhs_str}" not in self.__guesses
 
     def __find_possible_solutions(self) -> None:
         for pattern in self.__poss_patterns:
@@ -81,9 +91,8 @@ class Solver:
                 if self.__validate_lhs(self, pattern, lhs):
                     for rhs in product(self.__nums, repeat=rhs_len):
                         lhs_str, rhs_str = "".join(lhs), "".join(rhs)
-                        equation = f"{lhs_str}={rhs_str}"
-                        if eval(f"{lhs_str} == {rhs_str}") and equation not in self.__guesses:
-                            print(equation)
+                        if self.__validate_equation(lhs_str, rhs_str):
+                            print(f"{lhs_str}={rhs_str}")
 
     def solve(self) -> None:
         for i in range(6):
