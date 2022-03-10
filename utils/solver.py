@@ -20,12 +20,11 @@ class Solver:
         self.__operators: dict[str, int] = {k: 7 for k in "+-*/"}
         self.__guesses: list[str] = []
 
-    def __find_eq_index(self, eq_index: Optional[int] = None) -> None:
-        if eq_index is None:
-            eq_index = int(input(
-                "Which location did you put the equals sign? ")) - 1
+    def __find_eq_index(self, eq_index: int) -> None:
+        # eq_index = int(input(
+        #     "Which location did you put the equals sign? ")) - 1
         eq_correct = input("Is the equals sign in the correct position? Y/N: ")
-        if eq_correct.lower() == "y":
+        if eq_correct.lower() in ("y", "yes"):
             for pattern in self.__poss_patterns:
                 if pattern[eq_index] == "=":
                     self.__poss_patterns = [pattern]
@@ -36,29 +35,30 @@ class Solver:
                 if patt[eq_index] != "="]
 
     def __update_possible_chars(self) -> None:
-        prompt = "What color was {} at position {}? Green/Purple/Gray: "
+        prompt = "What color was '{}' at position '{}'? Green/Purple/Gray: "
         counts = defaultdict(int)
         used_equation = ""
         while len(used_equation) != 8:
             used_equation = input("What equation did you use? ").strip()
         self.__guesses.append(used_equation)
-        for i, char in enumerate(used_equation):
-            if char == "=":
+        for idx, char in enumerate(used_equation):
+            if char == "=" and self.__eq_index == -1:
+                self.__find_eq_index(idx)
                 continue
-            color = input(prompt.format(char, i + 1)).strip().lower()
+            color = input(prompt.format(char, idx + 1)).strip().lower()
             match color:
                 case "green":
                     for pattern in self.__poss_patterns:
-                        pattern[i] = char
+                        pattern[idx] = char
                     counts[char] += 1
                 case "purple":
                     counts[char] += 1
-                case "gray" if char in self.__nums:
+                case "gray" | "grey" if char in self.__nums:
                     if char in counts:
                         self.__nums[char] = counts[char]
                     else:
                         del self.__nums[char]
-                case "gray" if char in self.__operators:
+                case "gray" | "grey" if char in self.__operators:
                     if char in counts:
                         self.__operators[char] = counts[char]
                     else:
@@ -86,32 +86,26 @@ class Solver:
         return eval(f"{lhs_str} == {rhs_str}") and f"{lhs_str}={rhs_str}" not in self.__guesses
 
     def __find_possible_solutions(self) -> None:
+        # TODO Fix lhs_len value (currently always 0)
         for pattern in self.__poss_patterns:
-            if self.__eq_index != -1:
-                lhs_len = pattern.index("=")
-            else:
-                lhs_len, rhs_len = self.__eq_index, 7 - self.__eq_index
-            for lhs in product((self.__nums | self.__operators).keys(), repeat=lhs_len):
-                if self.__validate_lhs(self, pattern, lhs):
-                    for rhs in product(self.__nums.keys(), repeat=rhs_len):
-                        lhs_str, rhs_str = "".join(lhs), "".join(rhs)
-                        if self.__validate_equation(lhs_str, rhs_str):
-                            print(f"{lhs_str}={rhs_str}")
+            lhs_len = pattern.index(
+                "=") if self.__eq_index != -1 else self.__eq_index
+            print(lhs_len)
+            # rhs_len = 7 - self.__eq_index
+            # for lhs in product((self.__nums | self.__operators).keys(), repeat=lhs_len):
+            #     if self.__validate_lhs(pattern, lhs):
+            #         for rhs in product(self.__nums.keys(), repeat=rhs_len):
+            #             lhs_str, rhs_str = "".join(lhs), "".join(rhs)
+            #             if self.__validate_equation(lhs_str, rhs_str):
+            #                 print(f"{lhs_str}={rhs_str}")
 
     def solve(self) -> None:
         # TODO put it all together and test it
         for i in range(6):
             if i == 0:
-                print("Guess 9*8-7=65")
-                if self.__eq_index == -1:
-                    self.__find_eq_index(5)
+                print("Suggestion: 9*8-7=65")
             elif i == 1:
-                print("Guess 0+12/3=4")
-                if self.__eq_index == -1:
-                    self.__find_eq_index(6)
-            else:
-                self.__find_possible_solutions()
-                if self.__eq_index == -1:
-                    self.__find_eq_index()
+                print("Suggestion: 0+12/3=4")
             self.__update_possible_chars()
+            self.__find_possible_solutions()
             print("-" * 30)
