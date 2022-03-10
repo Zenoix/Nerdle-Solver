@@ -1,6 +1,5 @@
 from collections import defaultdict, Counter
 from itertools import groupby, product
-from re import match
 
 from utils.wildcard import WildCard
 
@@ -8,11 +7,14 @@ from utils.wildcard import WildCard
 class Solver:
     def __init__(self) -> None:
         self.__eq_index: int = -1
+
+        w = WildCard()
         self.__poss_patterns: list[list[str]] = [
-            [".", ".", ".", ".", ".", "=", ".", "."],
-            [".", ".", ".", ".", "=", ".", ".", "."],
-            [".", ".", ".", ".", ".", ".", "=", "."]
+            [w, w, w, w, w, "=", w, w],
+            [w, w, w, w, "=", w, w, w],
+            [w, w, w, w, w, w, "=", w]
         ]
+
         self.__nums: dict[str, int] = {k: 7 for k in "1234567890"}
         self.__operators: dict[str, int] = {k: 7 for k in "+-*/"}
         self.__guesses: list[str] = []
@@ -69,7 +71,7 @@ class Solver:
         conditions = [
             lhs[0] not in "0+-*/",
             consecutive_operators_valid,
-            match("".join(pattern[:pattern.index("=")]), "".join(lhs))
+            pattern[:pattern.index("=")] == lhs
         ]
         return all(conditions)
 
