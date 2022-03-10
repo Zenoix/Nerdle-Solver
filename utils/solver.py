@@ -1,5 +1,6 @@
 from collections import defaultdict, Counter
 from itertools import groupby, product
+from typing import Optional
 
 from utils.wildcard import WildCard
 
@@ -19,10 +20,11 @@ class Solver:
         self.__operators: dict[str, int] = {k: 7 for k in "+-*/"}
         self.__guesses: list[str] = []
 
-    def __find_eq_index(self) -> None:
-        eq_index = int(input(
-            "Which location did you put the equals sign? ")) - 1
-        eq_correct = input("Is it in the correct position? Y/N: ")
+    def __find_eq_index(self, eq_index: Optional[int] = None) -> None:
+        if eq_index is None:
+            eq_index = int(input(
+                "Which location did you put the equals sign? ")) - 1
+        eq_correct = input("Is the equals sign in the correct position? Y/N: ")
         if eq_correct.lower() == "y":
             for pattern in self.__poss_patterns:
                 if pattern[eq_index] == "=":
@@ -101,6 +103,17 @@ class Solver:
     def solve(self) -> None:
         # TODO put it all together and test it
         for i in range(6):
-            if self.__eq_index == -1:
-                self.__find_eq_index()
+            if i == 0:
+                print("Guess 9*8-7=65")
+                if self.__eq_index == -1:
+                    self.__find_eq_index(5)
+            elif i == 1:
+                print("Guess 0+12/3=4")
+                if self.__eq_index == -1:
+                    self.__find_eq_index(6)
+            else:
+                self.__find_possible_solutions()
+                if self.__eq_index == -1:
+                    self.__find_eq_index()
             self.__update_possible_chars()
+            print("-" * 30)
