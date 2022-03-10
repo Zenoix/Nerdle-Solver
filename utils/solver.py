@@ -102,8 +102,3 @@ class Solver:
             if self.__eq_index == -1:
                 self.__find_eq_index()
             self.__update_possible_chars()
-
-
-if __name__ == "__main__":
-    solver = Solver()
-    solver.solve()
