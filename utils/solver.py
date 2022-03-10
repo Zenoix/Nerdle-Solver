@@ -1,6 +1,8 @@
 from collections import defaultdict, Counter
 from itertools import product
 from re import search
+import sys
+import time
 
 from utils.wildcard import WildCard
 
@@ -23,8 +25,6 @@ class Solver:
         self.__invalid_location: list[list[str]] = [[] for _ in range(8)]
 
     def __find_eq_index(self, eq_index: int) -> None:
-        # eq_index = int(input(
-        #     "Which location did you put the equals sign? ")) - 1
         eq_correct = input("Is the equals sign in the correct position? Y/N: ")
         if eq_correct.lower() in ("y", "yes"):
             for pattern in self.__poss_patterns:
@@ -38,65 +38,74 @@ class Solver:
                 if patt[eq_index] != "="]
 
     def __update_possible_chars(self) -> None:
-        prompt = "What color was '{}' at position '{}'? Green/Purple/Gray: "
+        prompt = "What color was '{}' at position '{}'? (G)reen/(P)urple/(B)lack: "
         counts = defaultdict(int)
-        used_equation = ""
+        used_equation = input("What equation did you use? ").strip()
         while len(used_equation) != 8:
-            used_equation = input("What equation did you use? ").strip()
+            used_equation = input(
+                "Invalid equation, try again. What equation did you use? ").strip()
+        if input(f"Was {used_equation} the correct answer? Y/N: ").strip().lower() in ("y", "yes"):
+            print("Congratulations!")
+            sys.exit()
         self.__guesses.append(used_equation)
         for idx, char in enumerate(used_equation):
-            if isinstance(self.__poss_patterns[0][idx], str):
-                continue
-            elif char == "=":
+            if char == "=":
                 if self.__eq_index == -1:
                     self.__find_eq_index(idx)
                 continue
             color = input(prompt.format(char, idx + 1)).strip().lower()
             match color:
-                case "green":
+                case "green | g":
                     for pattern in self.__poss_patterns:
                         pattern[idx] = char
                     counts[char] += 1
                     self.__must_contain.add(char)
-                case "purple":
+                case "purple | p":
                     counts[char] += 1
                     self.__invalid_location[idx].append(char)
                     self.__must_contain.add(char)
-                case "gray" | "grey" if char in self.__nums:
+                case "black" | "b" if char in self.__nums:
                     if char in counts:
                         self.__nums[char] = counts[char]
                     else:
                         del self.__nums[char]
-                case "gray" | "grey" if char in self.__operators:
+                case "black" | "b" if char in self.__operators:
                     if char in counts:
                         self.__operators[char] = counts[char]
                     else:
                         del self.__operators[char]
 
     def __find_possible_guesses(self) -> list[str]:
+        # TODO Improve running time (Critical!!!!)
         possible = []
+        time_start = time.perf_counter()
         for pattern in self.__poss_patterns:
             lhs_len = pattern.index(
                 "=") if self.__eq_index == -1 else self.__eq_index
-            rhs_len = 7 - self.__eq_index
+            rhs_len = 7 - lhs_len
             for lhs in product((self.__nums | self.__operators).keys(), repeat=lhs_len):
+                # logging.debug(f"Generated {lhs} as lhs")
                 if self.__validate_lhs(pattern, lhs):
                     for rhs in product(self.__nums.keys(), repeat=rhs_len):
                         lhs_str, rhs_str = "".join(lhs), "".join(rhs)
                         if self.__validate_equation(pattern, lhs_str, rhs_str):
                             possible.append(f"{lhs_str}={rhs_str}")
+        time_stop = time.perf_counter()
         if len(possible) == 1:
             print(f"Only one possible solution {possible[0]}")
         else:
             print("\n".join(possible))
+            print(
+                f"Generated {len(possible)} in {time_stop - time_start:.2f} seconds")
         return possible
 
     def __validate_lhs(self, pattern: list[str], lhs: tuple[str]) -> bool:
+        regex_pattern = r"/0$|/0[+\-/*]|[+\-*/]0\d|[+\-*/]{2,}|[+\-*/]0[+\-*/]"
         valid_conditions = [
             lhs[0] not in "0+-*/",
             lhs[-1] not in "+-*/",
             lhs[-2:] != ("/", "0"),
-            not search(r"/0$|/0[+\-/*]|[+\-*/]0\d|[+\-*/]{2,}", "".join(lhs)),
+            not search(regex_pattern, "".join(lhs)),
             pattern[:pattern.index("=")] == list(lhs)
         ]
         return all(valid_conditions)
@@ -129,14 +138,16 @@ class Solver:
                     pattern[i] = first
 
     def solve(self) -> None:
-        # TODO put it all together and test it
         for i in range(6):
             if i == 0:
-                print("Suggestion: 9*8-7=65")
+                print("Guess 1: 9*8-7=65")
             elif i == 1:
-                print("Suggestion: 0+12/3=4")
+                print("Guess 2: 0+12/3=4")
             self.__update_possible_chars()
             print("-" * 30)
-            print("Generated possible guesses:")
-            possible_guesses = self.__find_possible_guesses()
-            print("-" * 30)
+            if i != 0:
+                print("Generated possible guesses:")
+                possible_guesses = self.__find_possible_guesses()
+                self.__update_patterns_from_possible_guesses(possible_guesses)
+                print("-" * 30)
+            print()
