@@ -1,6 +1,8 @@
-from re import match
-from itertools import groupby, product
 from collections import defaultdict, Counter
+from itertools import groupby, product
+from re import match
+
+from utils.wildcard import WildCard
 
 
 class Solver:
