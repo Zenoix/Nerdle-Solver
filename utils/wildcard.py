@@ -1,12 +1,15 @@
 class WildCard:
     """Wildcard to be used as an 'any character' character."""
-    def __eq__(self, _: str) -> bool:
+
+    __slots__ = ()
+
+    def __eq__(self, other: str) -> bool:
         """
         As a wildcard character, it returns True
         when compared to any character.
 
         Arguments:
-        _ -- The other character
+        other -- The other character
         """
         return True
 
