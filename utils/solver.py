@@ -37,12 +37,10 @@ class Solver:
 
     def __update_possible_chars(self) -> None:
         prompt = "What color was {} at position {}? Green/Purple/Gray: "
-        counts = defaultdict()
+        counts = defaultdict(int)
         used_equation = ""
         while len(used_equation) != 8:
             used_equation = input("What equation did you use? ").strip()
-            if used_equation != "":
-                print("Invalid equation.")
         self.__guesses.append(used_equation)
         for i, char in enumerate(used_equation):
             if char == "=":
