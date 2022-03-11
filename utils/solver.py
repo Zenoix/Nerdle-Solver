@@ -94,14 +94,14 @@ class Solver:
                     self.__find_eq_index(idx)
                 continue
             match input(prompt.format(char, idx + 1)).strip().lower():
-                case "green | g":
+                case "green" | "g":
                     # If we found a green, add char to all patterns at that index
                     for pattern in self.__poss_patterns:
                         pattern[idx] = char
                     counts[char] += 1
                     # If char is green, it must be contained in generated guess
                     self.__must_contain.add(char)
-                case "purple | p":
+                case "purple" | "p":
                     counts[char] += 1
                     self.__invalid_location[idx].append(
                         char)  # Char cannot be at that index
@@ -250,6 +250,8 @@ class Solver:
         """
 
         for i in range(8):
+            if isinstance(self.__poss_patterns[0][i], str):
+                continue
             first = generated_guesses[0][i]
             if all(guess[i] == first for guess in generated_guesses):
                 for pattern in self.__poss_patterns:
