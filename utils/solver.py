@@ -125,6 +125,7 @@ class Solver:
                         # If the operator does not exist,
                         # remove from possible operators
                         del self.__operators[char]
+        print()
 
     def __find_possible_guesses(self) -> list[str]:
         """
@@ -162,6 +163,7 @@ class Solver:
             print("\n".join(possible))
             print(
                 f"Generated {len(possible)} combinations in {time_stop - time_start:.2f} seconds")
+        print()
         return possible
 
     def __validate_lhs(self, pattern: list[str], lhs: tuple[str]) -> bool:
@@ -275,4 +277,3 @@ class Solver:
                 possible_guesses = self.__find_possible_guesses()
                 self.__update_patterns_from_possible_guesses(possible_guesses)
                 print("-" * 30)
-            print()
