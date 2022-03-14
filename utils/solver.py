@@ -226,7 +226,6 @@ class Solver:
 
         invalid_conditions = [
             len(-possible_char_counter),
-            len(rhs_str) > 1 and len(rhs_str) == "0",
             rhs_str[0] == "0",
             pattern != list(equation),
             equation in self.__guesses
