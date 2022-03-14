@@ -190,7 +190,6 @@ class Solver:
         valid_conditions = [
             lhs[0] not in "0+-*/",
             lhs[-1] not in "+-*/",
-            lhs[-2:] != ("/", "0"),
             not search(regex_pattern, "".join(lhs)),
             pattern[:pattern.index("=")] == list(lhs)
         ]
